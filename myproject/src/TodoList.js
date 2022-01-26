@@ -1,55 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useReducer } from "react";
 import { Form, Container, Button, Alert, Row, Col } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.css";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import TODO_ACTIONS from "./actions/todoAction";
+import todoReducer from "./reducers/todoReducers";
 
 const TodoList = () => {
   const initialData = JSON.parse(localStorage.getItem("todos"));
-  const [todoList, setTodoList] = useState([...initialData]);
   const [text, setText] = useState("");
 
-  //Format
-  //   [
-  //       {
-  //           data: "todo",
-  //           date: "current date",
-  //           isCompleted: "true/false"
-  //       }
-  //   ]
-  const addTodo = () => {
-    const newTodo = [
-      ...todoList, // It stores the previous data
-      {
-        data: text,
-        date: new Date().toLocaleString().split(",")[0],
-        isCompleted: false,
-      },
-    ];
-
-    setText("");
-    setTodoList(newTodo);
-    localStorage.setItem("todos", JSON.stringify(newTodo));
-  };
-
-  const toggleTodoCompletion = (idx) => {
-    const newTodo = todoList.map((todo, index) =>
-      index === idx ? { ...todo, isCompleted: !todo.isCompleted } : todo
-    );
-
-    setTodoList(newTodo);
-    localStorage.setItem("todos", JSON.stringify(newTodo));
-  };
-
-  const deleteTodo = (idx) => {
-    const response = window.confirm("Do you want to delete?");
-    if (response) {
-      const newTodo = todoList.filter((_, index) =>
-        index === idx ? false : true
-      );
-      setTodoList(newTodo);
-      localStorage.setItem("todos", JSON.stringify(newTodo));
-    }
-  };
+  const [state, dispatch] = useReducer(todoReducer, [...initialData]);
 
   return (
     <Container className="mt-3 text-center">
@@ -58,12 +18,30 @@ const TodoList = () => {
         type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onKeyPress={(e) => e.key === "Enter" && addTodo()}
+        onKeyPress={(e) => {
+          if (e.key == "Enter" && text.length > 0) {
+            dispatch({
+              type: TODO_ACTIONS.ADD_TODO,
+              // payloads: { text: text, setText: setText }, (If key an value are same, no need to repeat)
+              payloads: { text, setText },
+            });
+          }
+        }}
       />
 
       <br />
 
-      <Button onClick={addTodo}>
+      <Button
+        onClick={() => {
+          if (text.length > 0) {
+            // addTodo();
+            dispatch({
+              type: TODO_ACTIONS.ADD_TODO,
+              payloads: { text, setText },
+            });
+          }
+        }}
+      >
         {" "}
         <FaPlus />
         <lebel className="ms-2">Add</lebel>{" "}
@@ -72,8 +50,8 @@ const TodoList = () => {
       <br />
       <br />
 
-      {todoList.length > 0
-        ? todoList.map((todo, index) => {
+      {state.length > 0
+        ? state.map((todo, index) => {
             return (
               <Row>
                 <Col xs="10">
@@ -86,7 +64,13 @@ const TodoList = () => {
                         ? "line-through"
                         : "none",
                     }}
-                    onClick={() => toggleTodoCompletion(index)}
+                    onClick={() =>
+                      dispatch({
+                        type: TODO_ACTIONS.TOGGLE_TODO,
+                        // payloads: { index: index },
+                        payloads: { index },
+                      })
+                    }
                   >
                     <h3>{todo.data}</h3>
                     <small>{todo.date}</small>
@@ -100,7 +84,13 @@ const TodoList = () => {
                     style={{
                       cursor: "pointer",
                     }}
-                    onClick={() => deleteTodo(index)}
+                    onClick={() =>
+                      dispatch({
+                        type: TODO_ACTIONS.DELETE_TODO,
+                        // payloads: { index: index },
+                        payloads: { index },
+                      })
+                    }
                   />
                 </Col>
               </Row>
