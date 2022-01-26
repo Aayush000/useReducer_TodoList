@@ -1,4 +1,4 @@
-# Simple ToDO App using React
+# Simple ToDO App using React --> look into src folder for the code
 
 # Getting Started with Create React App
 
